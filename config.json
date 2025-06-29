@@ -1,0 +1,20 @@
+{
+    "server": {
+        "host": "140.115.52.18",
+        "port": 50051
+    },
+    "client": {
+        "target_host": "140.115.52.18",
+        "target_port": 50051
+    },
+    "camera": {
+        "device_id": 0,
+        "fps": 30,
+        "width": 1920,
+        "height": 1080
+    },
+    "video": {
+        "quality": 80,
+        "format": "JPEG"
+    }
+}

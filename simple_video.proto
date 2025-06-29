@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package simple_video;
+
+// 簡化的影像串流服務
+service VideoStreamService {
+    // 雙向串流：傳送端發送影像，接收端獲取影像
+    rpc StreamVideo(stream VideoMessage) returns (stream VideoMessage);
+}
+
+// 統一的訊息格式
+message VideoMessage {
+    oneof content {
+        VideoFrame frame = 1;      // 影像幀
+        ClientInfo client = 2;     // 客戶端資訊
+        StatusInfo status = 3;     // 狀態資訊
+    }
+}
+
+// 影像幀
+message VideoFrame {
+    bytes data = 1;           // 影像資料
+    int64 timestamp = 2;      // 時間戳記
+    int32 width = 3;          // 寬度
+    int32 height = 4;         // 高度
+}
+
+// 客戶端資訊
+message ClientInfo {
+    string client_type = 1;   // "sender" 或 "receiver"
+    string client_id = 2;     // 客戶端ID
+}
+
+// 狀態資訊
+message StatusInfo {
+    bool success = 1;         // 成功狀態
+    string message = 2;       // 訊息
+}
