@@ -24,12 +24,6 @@ class YOLOv8PoseProcessor:
     """YOLOv8 骨架偵測處理器"""
 
     def __init__(self, model_path='yolov8n-pose.pt'):
-        """
-        初始化 YOLOv8 骨架偵測處理器
-
-        Args:
-            model_path (str): YOLOv8 Pose 模型路徑
-        """
         print("正在載入 YOLOv8 模型...")
         import torch
         self.device = 'cpu'
@@ -54,6 +48,7 @@ class YOLOv8PoseProcessor:
             print(f"使用 CPU 運算，原因：{self.cuda_reason}")
         self.model = YOLO(model_path)
         # 不需要 self.model.to(self.device)
+
         # 骨架點連線定義 (COCO 格式)
         self.skeleton_connections = [
             (0, 1), (0, 2), (1, 3), (2, 4),  # 頭部
@@ -125,8 +120,8 @@ class YOLOv8PoseProcessor:
             person_count: 偵測到的人數
         """
         try:
-            # 使用 YOLOv8 進行姿勢偵測
-            results = self.model(frame, verbose=False)
+            # 使用 YOLOv8 進行姿勢偵測，指定 device
+            results = self.model(frame, device=self.device, verbose=False)
 
             # 複製影像以進行標注
             processed_frame = frame.copy()
@@ -459,8 +454,15 @@ class MemorySafeVideoSender:
 
     def get_yolo_stats(self):
         """獲取 YOLO 統計資訊"""
+        cuda_reason = ""
+        device = 'cpu'
+        if self.yolo_processor:
+            device = getattr(self.yolo_processor, 'device', 'cpu')
+            cuda_reason = getattr(self.yolo_processor, 'cuda_reason', '')
         return {
-            'enabled': self.yolo_enabled
+            'enabled': self.yolo_enabled,
+            'device': device,
+            'cuda_reason': cuda_reason
         }
 
     def toggle_yolo(self):
