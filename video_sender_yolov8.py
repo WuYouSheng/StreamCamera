@@ -31,19 +31,29 @@ class YOLOv8PoseProcessor:
             model_path (str): YOLOv8 Pose 模型路徑
         """
         print("正在載入 YOLOv8 模型...")
-        self.model = YOLO(model_path)
-
-        # 針對 Apple M 系列處理器優化
+        import torch
+        self.device = 'cpu'
+        self.cuda_reason = ''
         try:
-            import torch
-            if torch.backends.mps.is_available():
-                self.model.to('mps')
+            if torch.cuda.is_available():
+                self.device = 'cuda'
+                print(f"已啟用 CUDA 加速 (NVIDIA 顯示卡: {torch.cuda.get_device_name(0)})")
+            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                self.device = 'mps'
                 print("已啟用 MPS 加速 (Apple M 系列處理器)")
             else:
-                print("使用 CPU 運算")
-        except:
-            print("使用 CPU 運算")
-
+                if not torch.version.cuda:
+                    self.cuda_reason = "PyTorch 未安裝 CUDA 版本"
+                elif torch.cuda.device_count() == 0:
+                    self.cuda_reason = "找不到任何 NVIDIA 顯卡"
+                else:
+                    self.cuda_reason = "未知原因，請檢查 CUDA 驅動與安裝"
+                print(f"使用 CPU 運算，原因：{self.cuda_reason}")
+        except Exception as e:
+            self.cuda_reason = f"初始化 CUDA 檢查時發生錯誤: {e}"
+            print(f"使用 CPU 運算，原因：{self.cuda_reason}")
+        self.model = YOLO(model_path)
+        # 不需要 self.model.to(self.device)
         # 骨架點連線定義 (COCO 格式)
         self.skeleton_connections = [
             (0, 1), (0, 2), (1, 3), (2, 4),  # 頭部
